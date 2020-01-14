@@ -143,7 +143,7 @@ describe EthPacket do
       expect(@eth_packet.eth_saddr).to eql("00:1b:11:51:b7:ce")
       expect(@eth_packet.size).to eql(78)
       expect(@eth_packet.headers.first.body).to be_kind_of(PacketFu::IPHeader)
-      expect(@eth_packet.headers.first.members).to eql([:eth_dst, :eth_src, :eth_proto, :body])
+      expect(@eth_packet.headers.first.members).to eql([:eth_dst, :eth_src, :eth_tpid, :eth_tci, :eth_proto, :body])
     end
 
     # TODO: Figure out why this is failing
@@ -153,5 +153,14 @@ describe EthPacket do
     #
     #   expect(@eth_packet).to be_kind_of(InvalidPacket)
     # end
+
+    it "should read a vlan encapsulated ethpacket correctly" do
+      parsed_packets = PcapFile.read_packets("./test/vlan-pcapr.cap")
+      @eth_packet = parsed_packets.first
+
+      expect(@eth_packet).to be_kind_of(EthPacket)
+      expect(@eth_packet.eth_tpid).to eql(0x8100)
+      expect(@eth_packet.eth_tci).not_to be_nil
+    end
   end
 end

@@ -132,25 +132,57 @@ module PacketFu
   # For more on the construction on MAC addresses, see
   # http://en.wikipedia.org/wiki/MAC_address
   #
-  # TODO: Need to come up with a good way of dealing with vlan
-  # tagging. Having a usually empty struct member seems weird,
-  # but there may not be another way to do it if I want to preserve
-  # the Eth-ness of vlan-tagged 802.1Q packets. Also, may as well
-  # deal with 0x88a8 as well (http://en.wikipedia.org/wiki/802.1ad)
+  # ---------------------------------------------------------------------------
+  # Partially implement VLAN tag support
+  #
+  # When VLAN tags are present, an Ethernet header will an additional 32
+  # bit field (the 802.1Q Header) between the source MAC and the
+  # Ethernet Type/Protocol. See https://en.wikipedia.org/wiki/IEEE_802.1Q.
+  #
+  # The EthHeader struct contains space for the additional 802.1Q fields but
+  # they are only filled in if a vlanid is supplied to the constructor.
+  #
+  # Support isn't complete because some elements of the 802.1Q header are
+  # defaulted and we don't provide any way to set them - see comments in the
+  # initialize method for more details.
+  # ---------------------------------------------------------------------------
   #
   # ==== Header Definition
   #
   #  EthMac  :eth_dst                     # See EthMac
   #  EthMac  :eth_src                     # See EthMac
+  #  Int16   :eth_tpid                    # Nil if no vlan id supplied
+  #  Int16   :eth_tci                     # Nil if no vlan id supplied
   #  Int16   :eth_proto, Default: 0x8000  # IP 0x0800, Arp 0x0806
   #  String  :body
-  class EthHeader < Struct.new(:eth_dst, :eth_src, :eth_proto, :body)
+  class EthHeader < Struct.new(:eth_dst, :eth_src, :eth_tpid, :eth_tci, :eth_proto, :body)
     include StructFu
 
     def initialize(args={})
+      vlan_tpid = nil
+      vlan_tci = nil
+
+      if args[:eth_vlan_id]
+        # A VLAN ID has been supplied, define the 2 parts of the 802.1Q Header:
+        #    - The Tag Protocol Identifier is always set to 0x8100 to identify
+        #      the frame as 802.1Q
+        #    - The Tag Control Information is made up of:
+        #          - Priority code (3 bits): can be any value from 0 - 7.
+        #            Currently we just default to 0.
+        #          - Drop eligable indicator (1 bit): indicates if frame can be
+        #            dropped. Default to 0.
+        #          - Vlan ID (12 bits) - the supplied VLAN ID.
+        #      Since the priority code and drop indicator are defaulted to 0 we
+        #      can conveniently just set the TCI to be the same as the VLAN ID.
+        vlan_tpid = Int16.new.read(0x8100)
+        vlan_tci =  Int16.new.read(args[:eth_vlan_id].to_i)
+      end
+
       super(
         EthMac.new.read(args[:eth_dst]),
         EthMac.new.read(args[:eth_src]),
+        vlan_tpid,
+        vlan_tci,
         Int16.new(args[:eth_proto] || 0x0800),
         StructFu::String.new.read(args[:body])
       )
@@ -169,6 +201,36 @@ module PacketFu
     # Getter for the Ethernet protocol number.
     def eth_proto; self[:eth_proto].to_i; end
 
+    # Set the VLAN ID, this will set appropriate values for the eth_tci and
+    # eth_tpid fields.
+    def eth_vlan_id=(id)
+      if id
+        self[:eth_tpid] = Int16.new.read(0x8100)
+        self[:eth_tci] = Int16.new.read(id.to_i)
+      else
+        self[:eth_tpid] = nil
+        self[:eth_tci] = nil
+      end
+    end
+
+    # Getter for the 802.1Q Tag Protocol Identifier
+    def eth_tpid
+      tpid = nil
+      if self[:eth_tpid]
+        tpid = self[:eth_tpid].to_i
+      end
+      return tpid
+    end
+
+    # Getter for the 802.1Q Tag Control Information
+    def eth_tci
+      tci = nil
+      if self[:eth_tci]
+        tci = self[:eth_tci].to_i
+      end
+      return tci
+    end
+
     # Returns the object in string form.
     def to_s
       self.to_a.map {|x| x.to_s}.join
@@ -180,8 +242,23 @@ module PacketFu
       return self if str.nil?
       self[:eth_dst].read str[0,6]
       self[:eth_src].read str[6,6]
-      self[:eth_proto].read str[12,2]
-      self[:body].read str[14,str.size]
+
+      proto = Int16.new.read(str[12,2])
+
+      body_idx = 14
+
+      if proto.to_i == 0x8100
+        self[:eth_tpid] = proto
+        self[:eth_tci] = Int16.new.read(str[14,2])
+        self[:eth_proto].read(str[16,2])
+        body_idx = 18
+      else
+        self[:eth_tpid] = nil
+        self[:eth_tci] = nil
+        self[:eth_proto] = proto
+      end
+
+      self[:body].read str[body_idx,str.size]
       self
     end
 
@@ -242,6 +319,14 @@ module PacketFu
 
     def eth_proto_readable
       "0x%04x" % eth_proto
+    end
+
+    def eth_tpid_readable
+      tpid = nil
+      if eth_tpid
+        tpid = "0x%04x" % eth_tpid
+      end
+      return tpid
     end
 
   end

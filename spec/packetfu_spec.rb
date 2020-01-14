@@ -7,7 +7,7 @@ require 'fake_packets'
 
 describe PacketFu, "version information" do
   it "reports a version number" do
-    PacketFu::VERSION.should match /^1\.[0-9]+\.[0-9]+(.pre)?$/
+    PacketFu::VERSION.should match /^1\.[0-9]+\.[0-9]+(.pre)?(?:.msw)$/
   end
   its(:version) {should eq PacketFu::VERSION}
 

@@ -375,7 +375,7 @@ module PacketFu
       dtable.each do |proto_table|
         proto_table[1].each do |elems|
           elems.each_with_index do |e,i|
-            width = e.size
+            width = e.nil? ? 0 : e.size)
             elem_widths[i] = width if width > elem_widths[i]
           end
         end
