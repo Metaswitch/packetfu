@@ -17,9 +17,9 @@ Gem::Specification.new do |s|
   s.license     = 'BSD'
   s.required_ruby_version = '>= 2.1.0'
 
-  # Explicit dependencies on pcaprub and network_interface gems has been
-  # removed, they are now selectively loaded in packetfu.rb.
-  # Note that without these two gems many of the packet capture and injection
+  # Explicit dependencies on pcaprub has been removed, it is selectively loaded
+  # in common.rb so can be built without it.
+  # Note that without this gem many of the packet capture and injection
   # features of this library are unavailable.
   s.add_development_dependency('rake')
   s.add_development_dependency('rspec')

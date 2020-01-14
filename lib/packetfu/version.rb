@@ -2,7 +2,7 @@
 module PacketFu
 
   # Check the repo's for version release histories
-  VERSION = "1.1.11.msw"
+  VERSION = "1.1.13.msw"
 
   # Returns PacketFu::VERSION
   def self.version
