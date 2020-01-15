@@ -44,13 +44,6 @@ module PacketFu
       true
     end
 
-    def read(str=nil,args={})
-      raise "Cannot parse `#{str}'" unless self.class.can_parse?(str)
-      @eth_header.read(str)
-      super(args)
-      self
-    end
-
     def initialize(args={})
       @eth_header = EthHeader.new(args).read(args[:eth])
       @arp_header = ARPHeader.new(args).read(args[:arp])
@@ -59,7 +52,7 @@ module PacketFu
 
       # Please send more flavors to todb+packetfu@planb-security.net.
       # Most of these initial fingerprints come from one (1) sample.
-      case (args[:flavor].nil?) ? :nil : args[:flavor].to_s.downcase.intern
+      case (args[:flavor].nil?) ? :nil : args[:flavor].to_s.downcase.to_sym
       when :windows; @arp_header.body = "\x00" * 64				# 64 bytes of padding
       when :linux; @arp_header.body = "\x00" * 4 +				# 32 bytes of padding
         "\x00\x07\x5c\x14" + "\x00" * 4 +

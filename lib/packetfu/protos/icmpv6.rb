@@ -23,7 +23,7 @@ module PacketFu
   #  icmpv6_pkt.ipv6_saddr="2000::1234"
   #  icmpv6_pkt.ipv6_daddr="2000::5678"
   #
-  #  icmpv6_pkt.recalc	
+  #  icmpv6_pkt.recalc
   #  icmpv6_pkt.to_f('/tmp/icmpv6.pcap')
   #
   # == Parameters
@@ -49,13 +49,6 @@ module PacketFu
       return true
     end
 
-    def read(str=nil, args={})
-      raise "Cannot parse `#{str}'" unless self.class.can_parse?(str)
-      @eth_header.read(str)
-      super(args)
-      self
-    end
-
     def initialize(args={})
       @eth_header = EthHeader.new(args).read(args[:eth])
       @ipv6_header = IPv6Header.new(args).read(args[:ipv6])
@@ -72,12 +65,7 @@ module PacketFu
 
     # Calculates the checksum for the object.
     def icmpv6_calc_sum
-      checksum = 0
-
-      # Compute sum on pseudo-header
-      [ipv6_src, ipv6_dst].each do |iaddr|
-        8.times { |i| checksum += (iaddr >> (i*16)) & 0xffff }
-      end
+      checksum = ipv6_calc_sum_on_addr
       checksum += PacketFu::ICMPv6Header::PROTOCOL_NUMBER
       checksum += ipv6_len
       # Then compute it on ICMPv6 header + payload
@@ -96,9 +84,8 @@ module PacketFu
     end
 
     # Recalculates the calculatable fields for ICMPv6.
-    def icmpv6_recalc(arg=:all)
-      arg = arg.intern if arg.respond_to? :intern
-      case arg
+    def icmpv6_recalc(arg = :all)
+      case arg.to_sym
       when :icmpv6_sum
         self.icmpv6_sum = icmpv6_calc_sum
       when :all

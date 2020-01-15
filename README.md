@@ -1,7 +1,7 @@
 # PacketFu
 
-[![Build Status](https://secure.travis-ci.org/packetfu/packetfu.png)](http://travis-ci.org/packetfu/packetfu)
-[![Code Climate](https://codeclimate.com/github/packetfu/packetfu.png)](https://codeclimate.com/github/packetfu/packetfu)
+[![Build Status](https://secure.travis-ci.org/packetfu/packetfu.svg)](http://travis-ci.org/packetfu/packetfu)
+[![Code Climate](https://codeclimate.com/github/packetfu/packetfu.svg)](https://codeclimate.com/github/packetfu/packetfu)
 [![Coverage Status](https://coveralls.io/repos/github/packetfu/packetfu/badge.svg?branch=master)](https://coveralls.io/github/packetfu/packetfu?branch=master)
 
 A library for reading and writing packets to an interface or to a
@@ -113,13 +113,13 @@ Capture from an interface with show_live or whatever.
 
 This project is integrated with travis-ci and is regularly tested to work with the following rubies:
 
-- 2.1.6
-- 2.2.3
-- 2.3.0
+To checkout the current build status and what rubies we're currently supporting, click [here](https://travis-ci.org/packetfu/packetfu).
 
-To checkout the current build status for these rubies, click [here](https://travis-ci.org/packetfu/packetfu).
+## Supported OSs
 
-## Author
+This project is designed for use on Linux (Ubuntu|RHEL|BSD primarily) and OSX platforms and it is the intention of the PacketFu team to support those OSs to ensure PacketFu runs on them.  That said, PacketFu can and has been known to run on Windows as well as other unix-style platforms, but it's not actively supported in the sense that we may help from the community to help fill that gap.  If that is something you are interested in helping with, we welcome your support.
+
+## Authors
 
 PacketFu is maintained primarily by Tod Beardsley todb@packetfu.com and
 Jonathan Claudius claudijd@yahoo.com, with help from Open Source Land.

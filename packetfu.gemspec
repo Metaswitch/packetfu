@@ -14,19 +14,19 @@ Gem::Specification.new do |s|
     ease and fun they expect from Ruby.
   }
   s.files       = `git ls-files`.split($/)
-  s.license     = 'BSD'
+  s.license     = 'BSD-3-Clause'
   s.required_ruby_version = '>= 2.1.0'
 
   # Explicit dependencies on pcaprub has been removed, it is selectively loaded
   # in common.rb so can be built without it.
   # Note that without this gem many of the packet capture and injection
   # features of this library are unavailable.
-  s.add_development_dependency('rake')
-  s.add_development_dependency('rspec')
-  s.add_development_dependency('rspec-its')
-  s.add_development_dependency('sdoc')
-  s.add_development_dependency('pry')
-  s.add_development_dependency('coveralls')
+  s.add_development_dependency('rake', '~> 12.0')
+  s.add_development_dependency('rspec', '~> 3.0')
+  s.add_development_dependency('rspec-its', '~> 1.2')
+  s.add_development_dependency('sdoc', '~> 0.4')
+  s.add_development_dependency('pry', '~> 0.10')
+  s.add_development_dependency('coveralls', '~> 0.8')
 
 
   s.extra_rdoc_files  = %w[.document README.md]

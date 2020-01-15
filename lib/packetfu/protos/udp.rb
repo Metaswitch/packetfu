@@ -64,13 +64,13 @@ module PacketFu
     end
 
     def read(str=nil, args={})
-      raise "Cannot parse `#{str}'" unless self.class.can_parse?(str)
-      @eth_header.read(str)
+      super
       if args[:strip]
         udp_body_len = self.ip_len - self.ip_hlen - 8
         @udp_header.body.read(@udp_header.body.to_s[0,udp_body_len])
+        udp_calc_sum
+        @ip_header.ip_recalc unless ipv6?
       end
-      super(args)
       self
     end
 
@@ -103,19 +103,12 @@ module PacketFu
     def udp_calc_sum
       # This is /not/ delegated down to @udp_header since we need info
       # from the IP header, too.
-      checksum = 0
       if @ipv6_header
-        [ipv6_src, ipv6_dst].each do |iaddr|
-          8.times do |i|
-            checksum += (iaddr >> (i * 16)) & 0xffff
-          end
-        end
+        checksum = ipv6_calc_sum_on_addr
       else
-        checksum += (ip_src.to_i >> 16)
-        checksum += (ip_src.to_i & 0xffff)
-        checksum += (ip_dst.to_i >> 16)
-        checksum += (ip_dst.to_i & 0xffff)
+        checksum = ip_calc_sum_on_addr
       end
+
       checksum += 0x11
       checksum += udp_len.to_i
       checksum += udp_src.to_i
@@ -177,11 +170,6 @@ module PacketFu
         peek_data << "%04x" % self.ip_id
         peek_data.join
       end
-    end
-
-    # Is that packet an UDP on IPv6 packet ?
-    def ipv6?
-      not @ipv6_header.nil?
     end
 
   end
