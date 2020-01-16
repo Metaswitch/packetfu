@@ -128,11 +128,14 @@ module PacketFu
         udp_recalc(:all)
       when :tcp
         tcp_recalc(:all)
+      when :sctp
+        sctp_recalc(:all)
       when :all
         ip_recalc(:all) if @ip_header
         ipv6_recalc(:all) if @ipv6_header
         icmp_recalc(:all) if @icmp_header
         udp_recalc(:all) if @udp_header
+        sctp_recalc(:all) if @sctp_header
         tcp_recalc(:all) if @tcp_header
       else
         raise ArgumentError, "Recalculating `#{arg}' unsupported. Try :all"
@@ -170,6 +173,7 @@ module PacketFu
         ip_recalc(:ip_sum) if self.is_ip?
         recalc(:tcp) if self.is_tcp?
         recalc(:udp) if self.is_udp?
+        recalc(:sctp) if self.is_sctp?
       end
       self
     end
@@ -263,7 +267,7 @@ module PacketFu
       when /InvalidPacket$/; 0
       when /EthPacket$/; 1
       when /IPPacket$/, /ARPPacket$/, /LLDPPacket$/, /IPv6Packet$/; 2
-      when /TCPPacket$/, /UDPPacket$/, /ICMPPacket$/; 3
+      when /TCPPacket$/, /UDPPacket$/, /SCTPPacket$/, /ICMPPacket$/; 3
       when /HSRPPacket$/; 4
       else; self.new.headers.size
       end
@@ -525,7 +529,7 @@ module PacketFu
     end
 
     def respond_to?(sym, include_private = false)
-      if sym.to_s =~ /^(invalid|eth|arp|ip|icmp|udp|hsrp|tcp|ipv6)_/
+      if sym.to_s =~ /^(invalid|eth|arp|ip|icmp|udp|sctp|hsrp|tcp|ipv6)_/
         self.instance_variable_get("@#{$1}_header").respond_to? sym
       elsif sym.to_s =~ /^is_([a-zA-Z0-9]+)\?/
         if PacketFu.packet_prefixes.index($1)
